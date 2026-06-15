@@ -360,4 +360,50 @@ RSpec.describe RuboCop::Cop::GraphQL::OrderedFields, :config do
       RUBY
     end
   end
+
+  context "when a comment separates out-of-order fields within a group" do
+    it "registers an offense" do
+      expect_offense(<<~RUBY)
+        class UserType < BaseType
+          field :phone, String, null: true
+          # a comment
+          field :name, String, null: true
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Fields should be sorted in an alphabetical order within their section. Field `name` should appear before `phone`.
+        end
+      RUBY
+
+      expect_correction(<<~RUBY)
+        class UserType < BaseType
+          field :name, String, null: true
+          field :phone, String, null: true
+          # a comment
+        end
+      RUBY
+    end
+  end
+
+  context "when a comment separates in-order fields within a group" do
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY)
+        class UserType < BaseType
+          field :name, String, null: true
+          # a comment
+          field :phone, String, null: true
+        end
+      RUBY
+    end
+  end
+
+  context "when a blank line followed by a comment separates fields into different groups" do
+    it "does not register an offense" do
+      expect_no_offenses(<<~RUBY)
+        class UserType < BaseType
+          field :phone, String, null: true
+
+          # a comment
+          field :name, String, null: true
+        end
+      RUBY
+    end
+  end
 end

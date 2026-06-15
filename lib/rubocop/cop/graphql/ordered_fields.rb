@@ -65,9 +65,10 @@ module RuboCop
         def consecutive_fields(previous, current)
           return true if cop_config["Groups"] == false
 
-          (previous.source_range.last_line == current.source_range.first_line - 1) ||
-            (previous.parent.block_type? &&
-               previous.parent.last_line == current.source_range.first_line - 1)
+          prev_last = previous.parent.block_type? ? previous.parent.last_line : previous.source_range.last_line
+          curr_first = current.source_range.first_line
+
+          processed_source.lines[prev_last..(curr_first - 2)].none? { |l| l.strip.empty? }
         end
 
         def register_offense(previous, current)
